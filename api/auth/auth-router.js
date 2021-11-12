@@ -2,10 +2,11 @@ const router = require('express').Router();
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const { TOKEN_SECRET } = require('../secrets/index')
+const Jokes = require('../jokes/jokes-data')
 const { checkCredentialsExist, checkUsernamePassword } = require('../middleware/restricted')
 
-router.post('/register', checkCredentialsExist, checkUsernamePassword, (req, res, next) => {
-  res.end('implement register, please!');
+router.post('/register', checkCredentialsExist, checkUsernamePassword, async (req, res, next) => {
+  res.json(await Jokes.insert(req.body))
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -40,8 +41,9 @@ router.post('/register', checkCredentialsExist, checkUsernamePassword, (req, res
       .catch(next)
 });
 
-router.post('/login', checkUsernamePassword, checkCredentialsExist, (req, res, next) => {
-  res.end('implement login, please!');
+router.post('/login', checkUsernamePassword, checkCredentialsExist, async (req, res, next) => {
+  res.json(await Jokes.insert(req.body))
+  
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
