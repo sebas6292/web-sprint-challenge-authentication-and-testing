@@ -1,6 +1,10 @@
 const router = require('express').Router();
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
+const { TOKEN_SECRET } = require('../secrets/index')
+const { checkCredentialsExist, checkUsernamePassword } = require('../middleware/restricted')
 
-router.post('/register', (req, res) => {
+router.post('/register', checkCredentialsExist, checkUsernamePassword, (req, res, next) => {
   res.end('implement register, please!');
   /*
     IMPLEMENT
@@ -27,9 +31,16 @@ router.post('/register', (req, res) => {
     4- On FAILED registration due to the `username` being taken,
       the response body should include a string exactly as follows: "username taken".
   */
+ const { username, password } = req.body
+ const hash = bcrypt.hashSync(password, 8)
+ username.add({ username, password: hash })
+      .then(newUser => {
+        res.status(201).json(newUser)
+      })
+      .catch(next)
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', checkUsernamePassword, checkCredentialsExist, (req, res, next) => {
   res.end('implement login, please!');
   /*
     IMPLEMENT
@@ -54,6 +65,27 @@ router.post('/login', (req, res) => {
     4- On FAILED login due to `username` not existing in the db, or `password` being incorrect,
       the response body should include a string exactly as follows: "invalid credentials".
   */
+      if (bcrypt.compareSync(req.body.password, req.user.password)) {
+        const token = buildToken(req.user)
+        res.json({
+          message: `${req.user.username} is back!`,
+          token,
+        })
+      } else {
+        next({ status: 401, message: 'Invalid credentials'})
+      }
 });
+
+function buildToken(users) {
+  const payload = {
+    subject: users.user_id,
+    username: users.username,
+    password: users.password,
+  }
+  const options = {
+    expiresIn: '1d',
+  }
+  return jwt.sign(payload, TOKEN_SECRET, options)
+}
 
 module.exports = router;
